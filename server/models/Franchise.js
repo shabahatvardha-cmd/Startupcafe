@@ -18,14 +18,18 @@ const franchiseSchema = new mongoose.Schema({
   },
   city: {
     type: String,
-    required: true
+    default: 'N/A'
   },
   budget: {
     type: String,
-    required: true
+    default: 'N/A'
   },
   message: {
     type: String
+  },
+  source: {
+    type: String,
+    default: 'Franchise Inquiry Form'
   },
   status: {
     type: String,

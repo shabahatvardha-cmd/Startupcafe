@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bookingRoutes from './routes/bookingRoutes.js';
 import franchiseRoutes from './routes/franchiseRoutes.js';
+import brochureRoutes from './routes/brochureRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,6 +48,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/book', bookingRoutes);
 app.use('/api/franchise', franchiseRoutes);
+app.use('/api/brochure', brochureRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Startup Cafe API is running.' });
