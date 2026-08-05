@@ -67,7 +67,7 @@ export default function FranchiseSupport() {
     } finally {
       // Trigger PDF Download
       const link = document.createElement('a');
-      link.href = '/StartUp%20Cafe%20PDF.pdf';
+      link.href = '/StartUp%20Cafe%20Brochure.pdf';
       link.download = 'StartUp Cafe Brochure.pdf';
       document.body.appendChild(link);
       link.click();
