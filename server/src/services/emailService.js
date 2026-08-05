@@ -22,6 +22,14 @@ const createTransporter = () => {
     });
 };
 
+const getRecipients = (userEmail) => {
+    const admin = process.env.EMAIL_USER;
+    if (!userEmail || userEmail.trim().toLowerCase() === admin.trim().toLowerCase()) {
+        return admin;
+    }
+    return `${admin}, ${userEmail}`;
+};
+
 export const sendBookingEmail = async (bookingData) => {
     try {
         const { name, email, phone, plan, duration, date, people, location, message } = bookingData;
@@ -36,21 +44,25 @@ export const sendBookingEmail = async (bookingData) => {
 
         const mailOptions = {
             from: `"Startup Cafe Dashboard" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_USER,
-            subject: `🚀 New Workspace Booking: ${name}`,
+            to: getRecipients(email),
+            subject: `🚀 New Workspace Booking Confirmation: ${name}`,
             family: 4, // CRITICAL: Forces IPv4 to fix ENETUNREACH on Render
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <h2 style="color: #6366f1; margin: 0; font-size: 24px;">New Booking Alert</h2>
+                        <h2 style="color: #6366f1; margin: 0; font-size: 24px;">Workspace Booking Details</h2>
                         <p style="color: #64748b; margin-top: 5px;">Startup Cafe Dashboard</p>
                     </div>
                     
                     <div style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
-                                <td style="padding: 10px 0; color: #64748b;">Customer</td>
+                                <td style="padding: 10px 0; color: #64748b;">Customer Name</td>
                                 <td style="padding: 10px 0; color: #1e293b; font-weight: 600; text-align: right;">${name}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; color: #64748b;">Customer Email</td>
+                                <td style="padding: 10px 0; color: #1e293b; font-weight: 600; text-align: right;">${email}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px 0; color: #64748b;">Phone</td>
@@ -96,13 +108,13 @@ export const sendBrochureEmail = async (brochureData) => {
             return false;
         }
 
-        console.log(`📧 Initiating Brochure Download email for: ${fullName}`);
+        console.log(`📧 Initiating Brochure Download email for: ${fullName} (${email})`);
         const transporter = createTransporter();
 
         const mailOptions = {
             from: `"Startup Cafe Dashboard" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_USER,
-            subject: `📄 New Brochure Download: ${fullName}`,
+            to: getRecipients(email),
+            subject: `📄 Startup Cafe Brochure Download: ${fullName}`,
             family: 4, // CRITICAL: Forces IPv4 to fix ENETUNREACH on Render
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
@@ -132,7 +144,7 @@ export const sendBrochureEmail = async (brochureData) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Brochure email sent successfully:', info.messageId);
+        console.log('✅ Brochure email sent successfully to', getRecipients(email), 'MessageId:', info.messageId);
         return true;
     } catch (error) {
         console.error('❌ Brochure Email Error:', error.message);
@@ -149,13 +161,13 @@ export const sendFranchiseEmail = async (franchiseData) => {
             return false;
         }
 
-        console.log(`📧 Initiating Franchise Email for: ${fullName}`);
+        console.log(`📧 Initiating Franchise Email for: ${fullName} (${email})`);
         const transporter = createTransporter();
 
         const mailOptions = {
             from: `"Startup Cafe Portal" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_USER,
-            subject: `🤝 New Franchise Application: ${fullName} (${city || 'N/A'})`,
+            to: getRecipients(email),
+            subject: `🤝 Franchise Application: ${fullName} (${city || 'N/A'})`,
             family: 4, // CRITICAL: Forces IPv4 to fix ENETUNREACH on Render
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
@@ -198,7 +210,7 @@ export const sendFranchiseEmail = async (franchiseData) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Franchise email sent successfully:', info.messageId);
+        console.log('✅ Franchise email sent successfully to', getRecipients(email), 'MessageId:', info.messageId);
         return true;
     } catch (error) {
         console.error('❌ Franchise Email Error:', error.message);
