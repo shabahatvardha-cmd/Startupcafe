@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import ScrollToTop from './components/layout/ScrollToTop';
+import WhatsAppWidget from './components/layout/WhatsAppWidget';
 import Home from './pages/Home';
 import Franchise from './pages/Franchise';
 
@@ -16,6 +17,7 @@ function App() {
 
         <Navbar />
         <ScrollToTop />
+        <WhatsAppWidget />
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
