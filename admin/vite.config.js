@@ -10,6 +10,7 @@ const __dirname = path.dirname(__filename);
 // Standalone Admin Panel Vite Configuration
 export default defineConfig({
   base: '/',
+  envDir: '../',
   plugins: [react(), tailwindcss()],
   server: {
     port: 5174,
