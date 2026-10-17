@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Float } from '@react-three/drei';
 import { motion } from 'framer-motion';
+import { useSettings } from '../../context/SettingsContext';
+import { renderFormattedText } from '../../utils/textFormatter';
 
 const CoffeeCup = ({ position }) => (
   <Float speed={2} rotationIntensity={1} floatIntensity={1.5} position={position}>
@@ -115,6 +117,21 @@ const FloatingElements = () => {
 };
 
 export default function Hero() {
+  const { settings } = useSettings();
+  const {
+    badgeText = 'Premium Workspace Experience',
+    mainHeading = 'Your Premium Office',
+    subHeading = '@ Startup Cafe',
+    description = 'Elevate your work in a dynamic, futuristic ecosystem designed for creators, entrepreneurs, and visionaries.',
+    primaryButtonText = 'Book a Seat',
+    secondaryButtonText = 'Schedule a Visit',
+    accentColor = '#b026ff',
+    gradientStart = '#ff2975',
+    gradientEnd = '#00f0ff',
+    heroHeadingColor,
+    heroDescriptionColor,
+  } = settings || {};
+
   return (
     <section id="hero" className="relative w-full h-[90vh] flex items-center justify-center overflow-hidden bg-black text-white">
       {/* 3D Background */}
@@ -132,8 +149,13 @@ export default function Hero() {
            transition={{ duration: 1, ease: 'easeOut' }}
            className="inline-block mb-4 px-4 py-1.5 rounded-full border border-white/10 glass whitespace-nowrap"
         >
-          <span className="text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-blue">
-            Premium Workspace Experience
+          <span 
+            className="text-sm font-semibold bg-clip-text text-transparent"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${accentColor}, ${gradientEnd})`
+            }}
+          >
+            {renderFormattedText(badgeText)}
           </span>
         </motion.div>
 
@@ -141,11 +163,17 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+          style={{ color: heroHeadingColor || undefined }}
           className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight"
         >
-          Your Premium Office<br/> 
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue">
-            @ Startup Cafe
+          {renderFormattedText(mainHeading)}<br/> 
+          <span 
+            className="text-transparent bg-clip-text"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${gradientStart}, ${accentColor}, ${gradientEnd})`
+            }}
+          >
+            {renderFormattedText(subHeading)}
           </span>
         </motion.h1>
 
@@ -153,9 +181,10 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.4, ease: 'easeOut' }}
+          style={{ color: heroDescriptionColor || undefined }}
           className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl font-light"
         >
-          Elevate your work in a dynamic, futuristic ecosystem designed for creators, entrepreneurs, and visionaries.
+          {renderFormattedText(description)}
         </motion.p>
 
         <motion.div 
@@ -166,15 +195,18 @@ export default function Hero() {
         >
           <button 
             onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-neon-purple to-neon-blue hover:shadow-[0_0_30px_#b026ff] transition-shadow duration-300"
+            style={{
+              background: `linear-gradient(to right, ${accentColor}, ${gradientEnd})`
+            }}
+            className="px-8 py-4 rounded-xl font-bold text-white hover:shadow-[0_0_30px_#b026ff] transition-all duration-300"
           >
-            Book a Seat
+            {renderFormattedText(primaryButtonText)}
           </button>
           <button 
             onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
             className="px-8 py-4 rounded-xl font-bold text-white glass-card hover:bg-white/10 transition-colors duration-300"
           >
-            Schedule a Visit
+            {renderFormattedText(secondaryButtonText)}
           </button>
         </motion.div>
       </div>

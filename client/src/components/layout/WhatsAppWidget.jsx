@@ -1,11 +1,16 @@
 import { motion } from 'framer-motion';
 import WhatsAppIcon from './WhatsAppIcon';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function WhatsAppWidget({ 
-  phoneNumber = "919670111167", 
-  message = "Hello Startup Cafe! I'm reaching out from your website to make an inquiry." 
+  phoneNumber, 
+  message 
 }) {
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  const { settings } = useSettings();
+  const activePhone = phoneNumber || settings?.contactWhatsappNumber || "919670111167";
+  const activeMessage = message || settings?.contactWhatsappInquiryMessage || "Hello Startup Cafe! I'm reaching out from your website to make an inquiry.";
+  const cleanPhone = activePhone.replace(/\D/g, '');
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(activeMessage)}`;
 
   return (
     <motion.div

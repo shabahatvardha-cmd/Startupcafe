@@ -82,4 +82,36 @@ router.post('/', async (req, res) => {
   }
 });
 
+// GET /api/book - Fetch all bookings (sorted by newest first)
+router.get('/', async (req, res) => {
+  try {
+    const bookings = await Booking.find().sort({ createdAt: -1 });
+    res.status(200).json({ 
+      success: true, 
+      count: bookings.length, 
+      data: bookings 
+    });
+  } catch (err) {
+    console.error('❌ Error fetching bookings:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch bookings', 
+      error: err.message 
+    });
+  }
+});
+
+// DELETE /api/book/:id - Delete a booking by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Booking.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+    res.status(200).json({ success: true, message: 'Booking deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete booking', error: err.message });
+  }
+});
+
 export default router;

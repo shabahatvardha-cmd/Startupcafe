@@ -11,7 +11,6 @@ import FranchiseSupport from '../components/franchise/FranchiseSupport';
 import FranchiseRequirements from '../components/franchise/FranchiseRequirements';
 import InquiryForm from '../components/franchise/InquiryForm';
 import FranchiseTestimonials from '../components/franchise/FranchiseTestimonials';
-import Contact from '../components/sections/Contact';
 
 export default function Franchise() {
   useEffect(() => {

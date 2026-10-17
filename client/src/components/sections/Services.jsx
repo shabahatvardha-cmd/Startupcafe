@@ -1,44 +1,48 @@
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { Monitor, Users, Briefcase, Zap, Coffee, Globe } from 'lucide-react';
+import {
+  Monitor,
+  Users,
+  Briefcase,
+  Zap,
+  Coffee,
+  Globe,
+  Mic,
+  Wifi,
+  Shield,
+  Sparkles,
+  Building,
+  PhoneCall,
+  Calendar,
+  Laptop
+} from 'lucide-react';
+import { useSettings, DEFAULT_SERVICES } from '../../context/SettingsContext';
+import { renderFormattedText } from '../../utils/textFormatter';
 
-const services = [
-  {
-    title: 'Dedicated Desk',
-    description: 'Your personal workspace in a shared environment, guaranteed yours every day.',
-    icon: <Monitor size={32} className="text-neon-blue" />,
-    gradient: 'from-neon-blue/20 to-transparent'
-  },
-  {
-    title: 'Private Cabin',
-    description: 'Enclosed, customized spaces for teams focusing on high-growth and privacy.',
-    icon: <Briefcase size={32} className="text-neon-purple" />,
-    gradient: 'from-neon-purple/20 to-transparent'
-  },
-  {
-    title: 'Conference Rooms',
-    description: 'High-tech conference rooms equipped with smart screens and VC facilities.',
-    icon: <Users size={32} className="text-neon-pink" />,
-    gradient: 'from-neon-pink/20 to-transparent'
-  },
-  {
-    title: 'Virtual Office',
-    description: 'Professional business address and mail handling without the physical space.',
-    icon: <Globe size={32} className="text-neon-blue" />,
-    gradient: 'from-neon-blue/20 to-neon-purple/20'
-  },
-  {
-    title: 'Startup Networking',
-    description: 'Join a thriving ecosystem of founders, mentors, and investors.',
-    icon: <Zap size={32} className="text-[#facc15]" />,
-    gradient: 'from-[#facc15]/20 to-transparent'
-  },
-  {
-    title: 'Lounge & Cafe',
-    description: 'Relax, recharge, and collaborate over premium brewed coffee.',
-    icon: <Coffee size={32} className="text-neon-pink" />,
-    gradient: 'from-neon-pink/20 to-neon-purple/20'
+export const ICON_MAP = {
+  Monitor: { comp: Monitor, color: 'text-neon-blue' },
+  Briefcase: { comp: Briefcase, color: 'text-neon-purple' },
+  Users: { comp: Users, color: 'text-neon-pink' },
+  Globe: { comp: Globe, color: 'text-neon-blue' },
+  Zap: { comp: Zap, color: 'text-[#facc15]' },
+  Coffee: { comp: Coffee, color: 'text-neon-pink' },
+  Mic: { comp: Mic, color: 'text-neon-blue' },
+  Wifi: { comp: Wifi, color: 'text-neon-purple' },
+  Shield: { comp: Shield, color: 'text-emerald-400' },
+  Sparkles: { comp: Sparkles, color: 'text-yellow-400' },
+  Building: { comp: Building, color: 'text-cyan-400' },
+  PhoneCall: { comp: PhoneCall, color: 'text-pink-400' },
+  Calendar: { comp: Calendar, color: 'text-neon-blue' },
+  Laptop: { comp: Laptop, color: 'text-neon-purple' }
+};
+
+function renderServiceIcon(service) {
+  if (service.icon && typeof service.icon !== 'string') {
+    return service.icon;
   }
-];
+  const item = ICON_MAP[service.iconName] || ICON_MAP.Monitor;
+  const Comp = item.comp;
+  return <Comp size={32} className={item.color} />;
+}
 
 function TiltCard({ service }) {
   const mouseX = useMotionValue(0);
@@ -74,11 +78,11 @@ function TiltCard({ service }) {
       {/* Card Content */}
       <div className={`relative h-full bg-[#0a0a0c] rounded-2xl p-8 border border-white/5 overflow-hidden flex flex-col items-start gap-4 z-10 bg-gradient-to-br ${service.gradient}`}>
         <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
-          {service.icon}
+          {renderServiceIcon(service)}
         </div>
-        <h3 className="text-2xl font-bold text-white mt-4">{service.title}</h3>
+        <h3 className="text-2xl font-bold text-white mt-4">{renderFormattedText(service.title)}</h3>
         <p className="text-slate-400 font-light leading-relaxed">
-          {service.description}
+          {renderFormattedText(service.description)}
         </p>
       </div>
     </motion.div>
@@ -86,6 +90,22 @@ function TiltCard({ service }) {
 }
 
 export default function Services() {
+  const { settings } = useSettings();
+  const {
+    servicesHeading = 'Premium Work',
+    servicesAccent = 'Environments',
+    servicesDescription = 'From focused private spaces to collaborative open desk, we provide everything your startup needs to thrive.',
+    accentColor = '#b026ff',
+    gradientEnd = '#00f0ff',
+    servicesHeadingColor,
+    servicesDescriptionColor,
+    servicesList,
+  } = settings || {};
+
+  const activeServices = (Array.isArray(servicesList) && servicesList.length > 0)
+    ? servicesList
+    : DEFAULT_SERVICES;
+
   return (
     <section id="services" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
       <div className="text-center mb-16">
@@ -93,22 +113,31 @@ export default function Services() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          style={{ color: servicesHeadingColor || undefined }}
           className="text-4xl md:text-5xl font-bold text-white mb-4"
         >
-          Premium Work <br className="md:hidden" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">
-            Environments
+          {renderFormattedText(servicesHeading)} <br className="md:hidden" />
+          <span 
+            className="text-transparent bg-clip-text"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${gradientEnd}, ${accentColor})`
+            }}
+          >
+            {renderFormattedText(servicesAccent)}
           </span>
         </motion.h2>
-        <p className="text-slate-400 max-w-2xl mx-auto">
-          From focused private spaces to collaborative open desk, we provide everything your startup needs to thrive.
+        <p 
+          style={{ color: servicesDescriptionColor || undefined }}
+          className="text-slate-400 max-w-2xl mx-auto"
+        >
+          {renderFormattedText(servicesDescription)}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {services.map((service, index) => (
+        {activeServices.map((service, index) => (
           <motion.div 
-            key={index}
+            key={service.id || service.title || index}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

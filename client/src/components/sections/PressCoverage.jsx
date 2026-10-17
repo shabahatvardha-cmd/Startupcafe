@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Newspaper, ZoomIn, X, ChevronDown } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
+import { renderFormattedText } from '../../utils/textFormatter';
 
 // Vite magic: Automatically find all images in this folder at build time
 // Credibility-based priority order for sorting
@@ -245,12 +247,35 @@ const extractInfoFromFileName = (fileName) => {
   }
 };
 
+// Export default press items with mapped titles and excerpts
+export const INITIAL_PRESS_ITEMS = mediaItems.map((item, idx) => {
+  const desc = extractInfoFromFileName(item.fileName);
+  return {
+    id: item.fileName || `press-${idx}`,
+    fileName: item.fileName,
+    url: item.url,
+    title: desc.title,
+    publisher: desc.publisher,
+    excerpt: desc.excerpt,
+    isDefault: true,
+  };
+});
+
 export default function PressCoverage() {
+  const { settings } = useSettings();
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
+  // Active items: settings list if non-empty, otherwise initial items
+  const activeMediaList = useMemo(() => {
+    if (Array.isArray(settings?.mediaHighlightsList) && settings.mediaHighlightsList.length > 0) {
+      return settings.mediaHighlightsList.filter((item) => !item.hidden);
+    }
+    return INITIAL_PRESS_ITEMS;
+  }, [settings?.mediaHighlightsList]);
+
   // Determine how many images to show
-  const visibleImages = showAll ? displayItems : displayItems.slice(0, 8);
+  const visibleImages = showAll ? activeMediaList : activeMediaList.slice(0, 8);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') setSelectedImage(null);
@@ -270,7 +295,9 @@ export default function PressCoverage() {
             className="flex items-center justify-center gap-3 mb-4"
           >
             <Newspaper className="text-neon-pink w-6 h-6" />
-            <span className="text-neon-pink font-semibold tracking-wider uppercase text-sm">Media & Highlights</span>
+            <span className="text-neon-pink font-semibold tracking-wider uppercase text-sm">
+              {renderFormattedText(settings?.pressBadge || 'Media & Highlights')}
+            </span>
           </motion.div>
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
@@ -279,7 +306,7 @@ export default function PressCoverage() {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-5xl font-bold text-white"
           >
-            In The <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">Spotlight</span>
+            {renderFormattedText(settings?.pressHeading || 'In The Spotlight')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -288,7 +315,7 @@ export default function PressCoverage() {
             transition={{ delay: 0.2 }}
             className="text-slate-400 mt-6 max-w-2xl mx-auto text-lg"
           >
-            See what leading newspapers, media outlets, and the community are saying about our revolutionary co-working space.
+            {renderFormattedText(settings?.pressSubheading || 'See what leading newspapers, media outlets, and the community are saying about our revolutionary co-working space.')}
           </motion.p>
         </div>
 
@@ -296,11 +323,15 @@ export default function PressCoverage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <AnimatePresence>
             {visibleImages.map((item, index) => {
-              const meta = extractInfoFromFileName(item.fileName);
+              const meta = {
+                title: item.title || 'Media Highlight',
+                publisher: item.publisher || 'Feature',
+                excerpt: item.excerpt || '',
+              };
               
               return (
                 <motion.div
-                  key={item.url + index}
+                  key={item.id || item.url + index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -315,7 +346,10 @@ export default function PressCoverage() {
                       src={item.url} 
                       alt={meta.title} 
                       className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110 relative z-0 opacity-90 group-hover:opacity-100"
-                      onError={(e) => { e.target.style.display = 'none'; }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80';
+                      }}
                     />
                     
                     {/* Overlay Zoom Icon */}
@@ -325,17 +359,17 @@ export default function PressCoverage() {
                     
                     <div className="absolute bottom-3 left-3 z-30">
                       <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-xs font-semibold text-white border border-white/10">
-                        {meta.publisher}
+                        {renderFormattedText(meta.publisher)}
                       </span>
                     </div>
                   </div>
                   
                   <div className="p-5 flex-1 flex flex-col bg-white/[0.02]">
                     <h3 className="text-lg font-bold text-white mb-2 group-hover:text-neon-blue transition-colors line-clamp-2">
-                      {meta.title}
+                      {renderFormattedText(meta.title)}
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 mt-auto">
-                      {meta.excerpt}
+                      {renderFormattedText(meta.excerpt)}
                     </p>
                   </div>
                 </motion.div>
@@ -345,13 +379,13 @@ export default function PressCoverage() {
         </div>
 
         {/* Show More Button */}
-        {displayItems.length > 8 && (
+        {activeMediaList.length > 8 && (
           <div className="mt-16 flex justify-center">
             <button
               onClick={() => setShowAll(!showAll)}
               className="flex items-center gap-2 px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-neon-pink text-white transition-all font-medium group"
             >
-              {showAll ? 'Show Less' : `View All (${displayItems.length} Highlights)`}
+              {showAll ? 'Show Less' : `View All (${activeMediaList.length} Highlights)`}
               <ChevronDown className={`w-5 h-5 transition-transform duration-300 text-neon-pink group-hover:translate-y-1 ${showAll ? 'rotate-180 group-hover:-translate-y-1' : ''}`} />
             </button>
           </div>
@@ -382,6 +416,10 @@ export default function PressCoverage() {
               alt="Full Page Highlight"
               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl relative z-40"
               onClick={(e) => e.stopPropagation()}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&auto=format&fit=crop&q=80';
+              }}
             />
           </motion.div>
         )}

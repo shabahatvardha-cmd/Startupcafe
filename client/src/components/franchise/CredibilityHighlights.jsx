@@ -1,7 +1,58 @@
 import { motion } from 'framer-motion';
-import { Network, MapPin, Award } from 'lucide-react';
+import {
+  Network,
+  MapPin,
+  Award,
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Building2,
+  Sparkles,
+  Star,
+  Globe,
+  Rocket,
+  HeartHandshake,
+  Crown,
+  Trophy,
+  Briefcase,
+  Zap,
+} from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
+import { renderFormattedText } from '../../utils/textFormatter';
+
+const CREDIBILITY_ICON_MAP = {
+  Network,
+  MapPin,
+  Award,
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Building2,
+  Sparkles,
+  Star,
+  Globe,
+  Rocket,
+  HeartHandshake,
+  Crown,
+  Trophy,
+  Briefcase,
+  Zap,
+};
 
 export default function CredibilityHighlights() {
+  const { settings } = useSettings();
+
+  const pillar1Title = settings?.credibilityPillar1Title || '10+ Years of Startup Network';
+  const pillar1Desc = settings?.credibilityPillar1Desc || "A decade of building India's strongest startup ecosystem.";
+  const pillar2Title = settings?.credibilityPillar2Title || 'First Co-working Space of Eastern UP';
+  const pillar2Desc = settings?.credibilityPillar2Desc || 'Pioneering the coworking culture in Eastern Uttar Pradesh.';
+  const pillar3Title = settings?.credibilityPillar3Title || 'Acknowledged by Startup Leaders & Media';
+  const pillar3Desc = settings?.credibilityPillar3Desc || 'Recognized by Startup Leaders, Central Ministers, Cabinet Ministers and leading News Media.';
+
+  const Icon1 = CREDIBILITY_ICON_MAP[settings?.credibilityPillar1Icon] || Network;
+  const Icon2 = CREDIBILITY_ICON_MAP[settings?.credibilityPillar2Icon] || MapPin;
+  const Icon3 = CREDIBILITY_ICON_MAP[settings?.credibilityPillar3Icon] || Award;
+
   return (
     <section className="py-12 md:py-16 px-6 md:px-12 bg-dark-bg relative overflow-hidden">
       {/* Soft ambient lighting backgrounds */}
@@ -26,16 +77,16 @@ export default function CredibilityHighlights() {
           <div className="relative p-8 md:p-12 flex flex-col items-start justify-center border-b border-white/5 md:border-b-0 md:border-r border-white/5 overflow-hidden group hover:bg-white/[0.01] transition-all duration-300">
             {/* Small cyan outlined icon container */}
             <div className="mb-6 p-3 bg-neon-blue/5 border border-neon-blue/30 rounded-xl text-neon-blue w-fit group-hover:scale-110 group-hover:bg-neon-blue/10 transition-all duration-300">
-              <Network className="w-6 h-6" />
+              <Icon1 className="w-6 h-6" />
             </div>
             
             {/* Content */}
             <div className="relative z-10 max-w-[85%]">
               <h3 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight font-sans">
-                10+ Years of Startup Network
+                {renderFormattedText(pillar1Title)}
               </h3>
               <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-                A decade of building India's strongest startup ecosystem.
+                {renderFormattedText(pillar1Desc)}
               </p>
             </div>
             
@@ -57,16 +108,16 @@ export default function CredibilityHighlights() {
           <div className="relative p-8 md:p-12 flex flex-col items-start justify-center border-b border-white/5 md:border-b-0 md:border-r border-white/5 overflow-hidden group hover:bg-white/[0.01] transition-all duration-300">
             {/* Small purple outlined icon container */}
             <div className="mb-6 p-3 bg-neon-purple/5 border border-neon-purple/30 rounded-xl text-neon-purple w-fit group-hover:scale-110 group-hover:bg-neon-purple/10 transition-all duration-300">
-              <MapPin className="w-6 h-6" />
+              <Icon2 className="w-6 h-6" />
             </div>
             
             {/* Content */}
             <div className="relative z-10 max-w-[85%]">
               <h3 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight font-sans">
-                First Co-working Space of Eastern UP
+                {renderFormattedText(pillar2Title)}
               </h3>
               <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-                Pioneering the coworking culture in Eastern Uttar Pradesh.
+                {renderFormattedText(pillar2Desc)}
               </p>
             </div>
             
@@ -88,16 +139,16 @@ export default function CredibilityHighlights() {
           <div className="relative p-8 md:p-12 flex flex-col items-start justify-center overflow-hidden group hover:bg-white/[0.01] transition-all duration-300">
             {/* Small pink outlined icon container */}
             <div className="mb-6 p-3 bg-neon-pink/5 border border-neon-pink/30 rounded-xl text-neon-pink w-fit group-hover:scale-110 group-hover:bg-neon-pink/10 transition-all duration-300">
-              <Award className="w-6 h-6" />
+              <Icon3 className="w-6 h-6" />
             </div>
             
             {/* Content */}
             <div className="relative z-10 max-w-[85%]">
               <h3 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight font-sans">
-                Acknowledged by Startup Leaders & Media
+                {renderFormattedText(pillar3Title)}
               </h3>
               <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-                Recognized by Startup Leaders, Central Ministers, Cabinet Ministers and leading News Media.
+                {renderFormattedText(pillar3Desc)}
               </p>
             </div>
             

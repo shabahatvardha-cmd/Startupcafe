@@ -1,57 +1,31 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-
-const plans = [
-  {
-    name: 'Conference Room',
-    monthlyPrice: null,
-    dailyPrice: 999,
-    description: 'Professional space for meetings and presentations.',
-    features: ['Smart TV / Projector', 'High-Speed WiFi', 'Whiteboard', 'Free Coffee & Tea'],
-    popular: false,
-  },
-  {
-    name: 'Day Pass',
-    monthlyPrice: null,
-    dailyPrice: 499,
-    description: 'Perfect for drop-ins and occasional visits.',
-    features: ['High-Speed WiFi', 'Open Desk Seating', 'Free Coffee & Tea', 'Community Access'],
-    popular: true,
-  },
-  {
-    name: 'Private Cabin',
-    monthlyPrice: null,
-    dailyPrice: 999,
-    description: 'Daily access to a private, quiet workspace.',
-    features: ['Secured Space', 'High-Speed WiFi', 'Meeting Room Access', 'Free Coffee & Tea'],
-    popular: false,
-  },
-  {
-    name: 'Dedicated Desk',
-    monthlyPrice: 6999,
-    dailyPrice: null,
-    description: 'Your own permanent desk in our workspace.',
-    features: ['Reserved Desk', '24/7 Access', 'Meeting Room', 'Locker Storage', 'Printing Services', 'Free Coffee & Tea'],
-    popular: true,
-  },
-  {
-    name: 'Private Cabin',
-    monthlyPrice: 29999,
-    dailyPrice: null,
-    description: 'Secured private office for startups and teams.',
-    features: ['Furnished Cabin for 2-5', 'Company Branding', 'Meeting Rooms', 'Premium Network', 'Free Coffee & Tea', 'Dedicated IP Address'],
-    popular: false,
-  }
-];
+import { useSettings, DEFAULT_PRICING_PLANS } from '../../context/SettingsContext';
+import { renderFormattedText } from '../../utils/textFormatter';
 
 export default function Pricing({ onSelectBooking }) {
+  const { settings } = useSettings();
+  const {
+    pricingHeading = 'Simple, Transparent',
+    pricingAccent = 'Pricing',
+    accentColor = '#b026ff',
+    gradientStart = '#ff2975',
+    pricingHeadingColor,
+    pricingButtonText = 'Book Now',
+    pricingPlans,
+  } = settings || {};
+
+  const activePlans = (Array.isArray(pricingPlans) && pricingPlans.length > 0)
+    ? pricingPlans
+    : DEFAULT_PRICING_PLANS;
+
   const [isMonthly, setIsMonthly] = useState(true);
 
   const handleGetStarted = (plan) => {
     const duration = isMonthly ? 'Monthly' : 'Daily';
     const price = isMonthly ? plan.monthlyPrice : plan.dailyPrice;
-    
+
     // Format plan name as requested: "Plan Name (Duration) – ₹Price"
     let planLabel = plan.name;
     if (plan.name === 'Private Cabin') {
@@ -63,12 +37,17 @@ export default function Pricing({ onSelectBooking }) {
     }
 
     let suffix = duration === 'Monthly' ? '/month' : '/day';
-    if (plan.name === 'Conference Room' || (plan.name === 'Private Cabin' && duration === 'Daily')) {
+    if (plan.priceUnit) {
+      if (plan.priceUnit.includes('hour') || plan.priceUnit === '/hr') suffix = '/hr';
+      else if (plan.priceUnit.includes('mo') || plan.priceUnit === '/month') suffix = '/month';
+      else if (plan.priceUnit.includes('day')) suffix = '/day';
+      else suffix = plan.priceUnit.startsWith('/') ? plan.priceUnit : `/${plan.priceUnit}`;
+    } else if (plan.name === 'Conference Room' || (plan.name === 'Private Cabin' && duration === 'Daily')) {
       suffix = '/hr';
     }
 
     const finalPlanName = `${planLabel} – ₹${price}${suffix}`;
-    
+
     if (onSelectBooking) {
       onSelectBooking({
         planName: finalPlanName,
@@ -87,23 +66,32 @@ export default function Pricing({ onSelectBooking }) {
   return (
     <section id="pricing" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
       <div className="text-center mb-16">
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          style={{ color: pricingHeadingColor || undefined }}
           className="text-4xl md:text-5xl font-bold text-white mb-4"
         >
-          Simple, Transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-pink to-neon-purple">Pricing</span>
+          {renderFormattedText(pricingHeading)}{' '}
+          <span
+            className="text-transparent bg-clip-text"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${gradientStart}, ${accentColor})`
+            }}
+          >
+            {renderFormattedText(pricingAccent)}
+          </span>
         </motion.h2>
-        
+
         {/* Toggle */}
         <div className="flex items-center justify-center gap-4 mt-8">
           <span className={`text-sm font-medium transition-colors ${!isMonthly ? 'text-white' : 'text-slate-400'}`}>Daily</span>
-          <div 
+          <div
             className="w-14 h-8 bg-white/10 rounded-full p-1 cursor-pointer border border-white/20 relative"
             onClick={() => setIsMonthly(!isMonthly)}
           >
-            <motion.div 
+            <motion.div
               className="w-6 h-6 bg-gradient-to-r from-neon-purple to-neon-blue rounded-full shadow-lg"
               animate={{ x: isMonthly ? 24 : 0 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -114,15 +102,20 @@ export default function Pricing({ onSelectBooking }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-        {plans.map((plan, index) => {
+        {activePlans.map((plan, index) => {
           if (!isMonthly && plan.monthlyPrice !== null && plan.dailyPrice === null) return null;
           if (isMonthly && plan.dailyPrice !== null && plan.monthlyPrice === null) return null;
 
           const price = isMonthly ? plan.monthlyPrice : plan.dailyPrice;
-          
+          const displayUnit = plan.priceUnit || (
+            isMonthly
+              ? '/mo'
+              : (plan.name === 'Conference Room' || plan.name === 'Private Cabin' ? ' per hour' : '/day')
+          );
+
           return (
             <motion.div
-              key={plan.name}
+              key={plan.id || `${plan.name}-${index}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               whileHover={{ y: -10, transition: { duration: 0.2 } }}
@@ -135,29 +128,27 @@ export default function Pricing({ onSelectBooking }) {
                   MOST POPULAR
                 </div>
               )}
-              <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
-              <p className="text-slate-400 text-sm mb-6 h-10">{plan.description}</p>
+              <h3 className="text-xl font-semibold text-white mb-2">{renderFormattedText(plan.name)}</h3>
+              <p className="text-slate-400 text-sm mb-6 h-10">{renderFormattedText(plan.description)}</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold text-white">₹{price}</span>
                 <span className="text-slate-400">
-                  {isMonthly 
-                    ? '/mo' 
-                    : (plan.name === 'Conference Room' || plan.name === 'Private Cabin' ? ' per hour' : '/day')}
+                  {' '}{displayUnit}
                 </span>
               </div>
               <ul className="space-y-4 mb-8 h-48">
-                {plan.features.map((feature, i) => (
+                {(plan.features || []).map((feature, i) => (
                   <li key={i} className="flex items-center text-sm text-slate-300">
                     <Check size={18} className="text-neon-blue mr-3 flex-shrink-0" />
-                    {feature}
+                    {renderFormattedText(feature)}
                   </li>
                 ))}
               </ul>
-              <button 
+              <button
                 onClick={() => handleGetStarted(plan)}
                 className="w-full py-4 rounded-xl font-bold transition-all bg-gradient-to-r from-neon-purple to-neon-blue text-white hover:shadow-[0_0_20px_#b026ff]"
               >
-                Book Now
+                {renderFormattedText(pricingButtonText || 'Book Now')}
               </button>
             </motion.div>
           );

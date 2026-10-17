@@ -48,8 +48,8 @@ const sendViaResendOrNodemailer = async ({ subject, html, userEmail }) => {
 
     // Fallback to Nodemailer SMTP
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn('⚠️ Skipping Nodemailer: EMAIL_USER or EMAIL_PASS not set.');
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || process.env.EMAIL_PASS === 'your_email_app_password_here') {
+            console.warn('⚠️ Skipping Nodemailer: Valid EMAIL_PASS not set in .env (still placeholder).');
             return false;
         }
 
@@ -212,3 +212,108 @@ export const sendFranchiseEmail = async (franchiseData) => {
 
     return sendViaResendOrNodemailer({ subject, html, userEmail: email });
 };
+
+/**
+ * Send 6-Digit Admin Recovery Verification Code (OTP)
+ */
+export const sendAdminRecoveryOtpEmail = async ({ toEmail, otpCode }) => {
+    const subject = 'Your Admin Recovery Verification Code';
+    const text = `Your Startup Cafe Admin recovery verification code is: ${otpCode}\n\nThis code will expire in 5 minutes.\nDo not share this code with anyone.\nIf you did not request this recovery code, please ignore this email.`;
+    const html = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #0f172a;">
+            <div style="text-align: center; margin-bottom: 28px;">
+                <div style="display: inline-block; width: 44px; height: 44px; line-height: 44px; border-radius: 12px; background-color: #f1f5f9; font-size: 22px; margin-bottom: 8px;">🔐</div>
+                <h2 style="color: #6366f1; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Startup Cafe Admin</h2>
+                <p style="color: #64748b; margin-top: 4px; font-size: 13px;">Security &amp; Account Recovery</p>
+            </div>
+            
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                <p style="color: #475569; font-size: 13px; font-weight: 500; margin: 0 0 14px 0;">Use the following verification code to reset your admin password:</p>
+                <div style="display: inline-block; padding: 12px 28px; background: #6366f1; color: #ffffff; font-size: 32px; font-weight: 800; letter-spacing: 8px; border-radius: 12px; font-family: monospace;">
+                    ${otpCode}
+                </div>
+                <p style="color: #dc2626; font-size: 12px; font-weight: 600; margin: 14px 0 0 0;">⏱️ This code will expire in 5 minutes.</p>
+            </div>
+
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 18px; font-size: 12px; color: #64748b; line-height: 1.6;">
+                <p style="margin: 0 0 8px 0;"><strong style="color: #334155;">⚠️ Security Notice:</strong> Never share this code with anyone. Startup Cafe staff will never ask you for this verification code.</p>
+                <p style="margin: 0;">If you did not request password recovery, please ignore this email. Your existing credentials remain completely secure.</p>
+            </div>
+        </div>
+    `;
+
+    // Try Resend API first if configured
+    const resend = getResendClient();
+    if (resend) {
+        try {
+            console.log(`🚀 Sending Admin Recovery OTP via Resend API to: ${toEmail}`);
+            const { data, error } = await resend.emails.send({
+                from: 'Startup Cafe Security <onboarding@resend.dev>',
+                to: [toEmail],
+                subject,
+                html,
+                text,
+            });
+
+            if (!error) {
+                console.log('✅ Admin OTP sent via Resend API! ID:', data?.id);
+                return true;
+            }
+            console.warn('⚠️ Resend API warning during OTP dispatch:', error);
+        } catch (resendErr) {
+            console.error('⚠️ Resend exception for OTP, falling back to SMTP:', resendErr.message);
+        }
+    }
+
+    // Fallback to Nodemailer SMTP
+    try {
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || process.env.EMAIL_PASS === 'your_email_app_password_here') {
+            console.warn('⚠️ Nodemailer SMTP skipped: Valid EMAIL_PASS not set in .env (still placeholder).');
+            return false;
+        }
+
+        const cleanEmailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+        const transportConfig = process.env.SMTP_HOST && process.env.SMTP_HOST !== 'smtp.gmail.com'
+            ? {
+                host: process.env.SMTP_HOST,
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: Number(process.env.SMTP_PORT) === 465,
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: cleanEmailPass
+                },
+                tls: { rejectUnauthorized: false },
+                connectionTimeout: 10000,
+                greetingTimeout: 5000,
+                socketTimeout: 10000
+            }
+            : {
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: cleanEmailPass
+                },
+                tls: { rejectUnauthorized: false },
+                connectionTimeout: 10000,
+                greetingTimeout: 5000,
+                socketTimeout: 10000
+            };
+
+        const transporter = nodemailer.createTransport(transportConfig);
+
+        const info = await transporter.sendMail({
+            from: `"Startup Cafe Security" <${process.env.EMAIL_USER}>`,
+            to: toEmail,
+            subject,
+            text,
+            html
+        });
+
+        console.log('✅ Admin OTP sent via Nodemailer SMTP successfully:', info.messageId);
+        return true;
+    } catch (smtpErr) {
+        console.error('❌ Nodemailer SMTP Error during Admin OTP dispatch:', smtpErr.message);
+        return false;
+    }
+};
+
